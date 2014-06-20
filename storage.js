@@ -8,7 +8,12 @@ function __storage(config){
     
     var tree = {};
 
+    // TODO read in file and initialize tree.
+    // TODO if too much records are old, optimize the file before any
+    //      actions
+
     function _save(key, value){
+        // TODO encode key and value, append to file
     };
 
     //////////////////////////////////////////////////////////////////////
