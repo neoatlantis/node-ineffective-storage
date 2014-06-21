@@ -12,8 +12,33 @@ function __storage(config){
     // TODO if too much records are old, optimize the file before any
     //      actions
 
+    function _read(line){
+        // returns true, when a fresh item is registered.
+        // returns false, when an item is errorous, or when old items under
+        //                the same key exists.
+        var stringified = new $.node.buffer.Buffer(line.trim(), 'base64');
+        stringified = stringified.toString('utf-8');
+        try{
+            var json = JSON.parse(stringified), ret=true;
+            if(tree[json.k]) ret = false;
+            tree[json.k] = json.v;
+        } catch(e){
+            return false;
+        };
+        return ret;
+    };
+
     function _save(key, value){
-        // TODO encode key and value, append to file
+        var b64 = new $.node.buffer.Buffer(JSON.stringify({
+            k: key,
+            v: value,
+        }), 'utf-8').toString('base64') + '\n\r';
+
+        $.node.fs.writeFileSync(
+            config.path,
+            b64,
+            {flag: 'a+', encoding: null}
+        );
     };
 
     //////////////////////////////////////////////////////////////////////
