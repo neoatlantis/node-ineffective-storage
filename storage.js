@@ -1,5 +1,6 @@
 module.exports = function(config){ return new __storage(config); };
 
+var _fs = require('fs'), _buffer = require('buffer');
 function __storage(config){
     var self = this;
 
@@ -16,7 +17,7 @@ function __storage(config){
         // returns true, when a fresh item is registered.
         // returns false, when an item is errorous, or when old items under
         //                the same key exists.
-        var stringified = new $.node.buffer.Buffer(line.trim(), 'base64');
+        var stringified = _buffer.Buffer(line.trim(), 'base64');
         stringified = stringified.toString('utf-8');
         try{
             var json = JSON.parse(stringified), ret=true;
@@ -29,17 +30,42 @@ function __storage(config){
     };
 
     function _save(key, value){
-        var b64 = new $.node.buffer.Buffer(JSON.stringify({
+        var b64 = new _buffer.Buffer(JSON.stringify({
             k: key,
             v: value,
         }), 'utf-8').toString('base64') + '\n\r';
 
-        $.node.fs.writeFileSync(
+        _fs.writeFileSync(
             config.path,
             b64,
             {flag: 'a+', encoding: null}
         );
     };
+
+    /* read the file for initializing */
+    var filedataBuf = _buffer.Buffer(0);
+    try{
+        filedataBuf = _fs.readFileSync(
+            config.path, 
+            {
+                encoding: null,
+                flag: 'r+',
+            }
+        );
+    } catch(e){
+    };
+
+    var count = 0, ineffective = 0;
+    var parseBuf = '', lastBreak = 0, readResult = false;
+    for(var i=0; i<filedataBuf.length; i++){
+        if(filedataBuf[i] != 0x0a) continue; // \n
+        count += 1;
+        parseBuf = filedataBuf.slice(lastBreak, i);
+        lastBreak = i + 1;
+        readResult = _read(parseBuf.toString());
+        if(!readResult) ineffective += 1;
+    };
+
 
     //////////////////////////////////////////////////////////////////////
     
